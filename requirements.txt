@@ -1,4 +1,4 @@
-numpy~=1.24.4
+numpy>=1.24.4
 tifffile~=2024.8.30
 scikit-image~=0.24.0
 scipy~=1.13.1

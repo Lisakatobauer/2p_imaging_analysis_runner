@@ -20,3 +20,22 @@ config = {
 pipeline = Suite2pRun(**config)
 pipeline.run_extraction()
 
+# perform the F trace processing
+
+# Initialize processor
+trace_processor = Suite2pTraces(
+)
+
+# Process all planes (automatically saves results)
+trace_processor.process_all_planes()
+
+# Get specific trace types
+dff_traces = trace_processor.get_processed_traces()  # Default is dff
+zscore_traces = trace_processor.get_processed_traces(trace_type='zscore')
+
+# Get traces for a specific plane
+plane_2_traces = trace_processor.get_processed_traces(plane=2)
+
+#
+activity_plot(plane_2_traces)
+cell_location()
