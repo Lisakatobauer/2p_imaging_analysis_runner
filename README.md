@@ -22,3 +22,8 @@ Raw data path?
 processed data path?
 
 framerate and nplanes
+
+start iwth config setup
+# Generally, you should only run together the data that has the same image acquisition.
+# E.g. framerate/number planes/resolution.
+# Because this defines your suite2p settings.

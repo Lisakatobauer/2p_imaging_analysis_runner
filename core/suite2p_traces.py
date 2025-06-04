@@ -23,8 +23,7 @@ class Suite2pTraces:
     }
 
     def __init__(
-            self,
-            traces, framerate
+            self, traces, framerate
     ):
         """
         Initialize the Suite2p traces processor.
@@ -38,15 +37,9 @@ class Suite2pTraces:
             framerate: Imaging frame rate (Hz)
             force_processing: If True, reprocess even if cached files exist
         """
-        self.force_processing = force_processing
-        self.framerate = framerate
-        self.animalnum = animalnum
-        self.exptype = exptype
-        self.expnum = expnum
-        self.number_planes = number_planes
 
         # Initialize data structures
-        self.ftracescells = self._load_raw_traces(suite2p)
+        self.ftracescells = traces
         self.processed_data = {t: {} for t in self.TRACE_TYPES}
         self.load_status = {plane: False for plane in range(number_planes)}
         self.process_status = {plane: False for plane in range(number_planes)}
@@ -76,8 +69,6 @@ class Suite2pTraces:
         except Exception as e:
             logger.error(f"Error saving traces for plane {plane}: {e}")
             raise
-
-
 
     def process_all_planes(self) -> Dict[int, np.ndarray]:
         """Process traces for all planes."""

@@ -2,7 +2,8 @@ import glob
 import os
 import shutil
 import sys
-from typing import Dict, Optional
+import re
+from typing import Dict
 
 import numpy as np
 
@@ -15,10 +16,11 @@ from suite2p.io import BinaryFile
 from suite2p.registration.register import shift_frames_and_write
 
 from utils import utils
+from utils.config import Suite2pConfig
 from utils.processingunit import ProcessingUnit
-from usage_examples.data.lisa_ops import cellpose_model_ops
+from usage_examples.data.standard_ops import standard_ops
+from utils.utils import output_dir
 
-output_dir = utils.get_git_root() / 'usage_examples' / 'data'
 classifier_file = os.path.join(output_dir, 'EK_classifier16012020.npy')
 
 
@@ -27,46 +29,37 @@ class Suite2pProcessor(ProcessingUnit):
     Runs suite2p pipeline across experiments in stages from python. Perform ROI detection on downsampled frames.
     """
 
-    def __init__(
-            self, config:Suite2pConfig,
-
-    ):
+    def __init__(self, config: Suite2pConfig, fishnum):
 
         """
         Initialize Suite2p processing pipeline.
 
         Args:
-            suite2ppath_raw: Path to raw data
-            suite2ppath_processed: Path to save processed data
-            fishnum: Fish ID number
-            framerate: Imaging frame rate (Hz)
-            number_planes: Number of imaging planes
-            experiments: Dictionary of experiments
-            experiment_lengths: Dictionary of experiment lengths
-            downsampling_factor: Factor for downsampling (default: 5)
-            classifierfile: Path to classifier file (optional)
+            config: instance of config path
         """
 
-        super().__init__(suite2ppath_processed)
+        super().__init__(config.processed_path)
         self.config = config
-        self.your_ops = cellpose_model_ops
-        self.suite2ppath_raw = suite2ppath_raw
-        self.suite2ppath_processed = suite2ppath_processed
-        self.fishnum = fishnum
-        self.framerate = framerate
-        self.number_planes = number_planes
-        self.experiments = experiments
-        self.experiment_lengths = experiment_lengths
-        self.downsampling_factor = downsampling_factor
-        self.classifierfile = classifierfile
-        self.bidirectional_scanning = bidirectional_scanning
+        self.your_ops = standard_ops
+        self.suite2ppath_raw = config.raw_path
+        self.suite2ppath_processed = config.processed_path
+
+        self.setup_data = config.suite2p_ops
+        self.framerate = self.setup_data.get('framerate', 30)
+        self.number_planes = self.setup_data.get('number_planes', 1)
+        self.downsampling_factor = self.setup_data.get('downsampling_factor', 5)
+        self.classifierfile = self.setup_data.get('classifierfile', None)
+        self.bidirectional_scanning = self.setup_data.get('bidirectional_scanning', True)
+
+        self.fishnum = int(re.findall(r'\d+', fishnum)[0])
+        self.fishdata = config.get_fish_config(fishnum)
+        self.experiments = self.fishdata['experiments']
+        self.experiment_lengths = self.fishdata['experiment_lengths']
 
         # Derived parameters
         self.volumerate = self.framerate
         self.downsample_volumerate = self.volumerate / self.downsampling_factor
         self.date = list(self.experiments.keys())[0]
-
-        self._validate_inputs()
 
         # Initialize paths
         self.downsampled_filename = None
@@ -241,7 +234,7 @@ class Suite2pProcessor(ProcessingUnit):
 
         ops = default_ops()
         if self.your_ops:
-            ops = cellpose_model_ops()
+            ops = standard_ops()
 
         db = {
             'look_one_level_down': False,
@@ -299,7 +292,7 @@ class Suite2pProcessor(ProcessingUnit):
 
         ops = default_ops()
         if self.your_ops:
-            ops = cellpose_model_ops()
+            ops = standard_ops()
         db = {
             'look_one_level_down': False,
             'data_path': [self.filter_path],
@@ -401,7 +394,7 @@ class Suite2pProcessor(ProcessingUnit):
         print('Starting ROI detection...')
         ops = default_ops()
         if self.your_ops:
-            ops = cellpose_model_ops()
+            ops = standard_ops()
 
         db = {
             'look_one_level_down': False,
@@ -457,8 +450,7 @@ class Suite2pProcessor(ProcessingUnit):
                 experiment_n = experiment_ns[exp_n]
 
                 # Calculate frames for the current experiment
-                fps = self.framerate
-                exp_frames = int(exp_length * fps)
+                exp_frames = int(exp_length * self.framerate)
 
                 F_exp = F[:, time_offset:time_offset + exp_frames]
                 time_offset += exp_frames
@@ -490,8 +482,8 @@ class Suite2pProcessor(ProcessingUnit):
         if hasattr(self, 'your_ops'):
             ops.update(self.your_ops)
         return {
-            'fs': ops.get('fs'),
-            'nplanes': ops.get('nplanes'),
+            'fs': self.volumerate,
+            'nplanes': self.number_planes,
             'nchannels': ops.get('nchannels'),
             'tau': ops.get('tau'),
             'nonrigid': ops.get('nonrigid', True),
@@ -504,52 +496,3 @@ class Suite2pProcessor(ProcessingUnit):
         if hasattr(self, 'your_ops'):
             ops.update(self.your_ops)
         return ops
-
-    def _initialize_suite2p_processor(self) -> Suite2pRun:
-        """Initialize and configure the Suite2p processor."""
-        return Suite2pRun(
-            str(self.suite2ppath_raw),
-            str(self.suite2ppath_processed),
-            self.animalnum,
-            self.framerate,
-            self.imagingfiles,
-            self.number_planes,
-            self.experiments,
-            self.experiment_lengths
-        )
-
-    processor = self._initialize_suite2p_processor()
-    self.run_hash = processor.define_run_hash(
-        your_ops=lisa_ops(),
-        motion_correction=True,
-        filtering=True,
-        downsampling=True
-    )
-    except (FileNotFoundError, AssertionError) as e:
-    logger.warning(f"Could not load existing data: {e}. Running Suite2p processing...")
-    processor.run_extraction(self.run_hash)
-
-
-def main():
-    # Example configuration - replace with your actual paths and parameters
-    config = {
-        'suite2ppath_raw': 'J:\\_Projects\\Lisa\\rawdata',
-        'suite2ppath_processed': 'J:\\_Projects\\Lisa\\processed',
-        'fishnum': 125,
-        'framerate': 30.0,
-        'number_planes': 6,
-        'experiments': {
-            "20240425": {
-                '001': 'dark', '002': 'background', '003': 'okr', '004': 'pseudosaccade', '005': 'circleJJ'}},
-        'experiment_lengths': {'dark': 1800, 'background': 1800, 'okr': 900, 'pseudosaccade': 1500, 'circleJJ': 1390.8},
-        'downsampling_factor': 5,
-        'classifierfile': classifier_file
-    }
-
-    # Initialize and run the pipeline
-    pipeline = Suite2pProcessor(**config)
-    pipeline.run_extraction()
-
-
-if __name__ == '__main__':
-    main()

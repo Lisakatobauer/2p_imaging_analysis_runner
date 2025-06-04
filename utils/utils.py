@@ -54,3 +54,6 @@ def get_git_root() -> Path:
     return Path(
         subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], text=True).strip()
     )
+
+
+output_dir = get_git_root() / 'usage_examples' / 'data'

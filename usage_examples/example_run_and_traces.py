@@ -1,6 +1,6 @@
 # Example configuration - replace with your actual paths and parameters
 from core.suite2p_F_process import Suite2pTraces
-from core.suite2p_run import classifier_file, Suite2pProcessor
+from core.suite2p_processor import classifier_file, Suite2pProcessor
 
 config = {
     'suite2ppath_raw': 'J:\\_Projects\\Lisa\\rawdata',

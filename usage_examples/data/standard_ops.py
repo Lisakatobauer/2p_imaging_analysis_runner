@@ -3,7 +3,7 @@ from importlib_metadata import metadata as _metadata
 version = _metadata('suite2p')['version']
 
 
-def cellpose_model_ops():
+def standard_ops():
     """ Lisa Bauers standard options to run pipeline when using cellpose model. """
     return {
         # Suite2p version

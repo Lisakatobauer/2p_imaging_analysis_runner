@@ -1,12 +1,66 @@
-# ops configuration
+import importlib.util
+from pathlib import Path
+from typing import Dict, Any, Optional
+
 
 class Suite2pConfig:
-    config_path =
-    raw_path
-    processed_path
-    classifierfile = None
-    suite2p_ops =
+    def __init__(self,
+                 config_path: Path,
+                 raw_path: Path,
+                 processed_path: Path,
+                 suite2p_ops: Dict[str, Any],
+                 classifier_file: Optional[Path] = None,
+                 downsampling_factor: int = 5,
+                 bidirectional_scanning: bool = True):
+        self._fish_configs_by_name = None
+        self.config_path = Path(config_path)
+        self.raw_path = Path(raw_path)
+        self.processed_path = Path(processed_path)
+        self.suite2p_ops = suite2p_ops
+        self.classifier_file = classifier_file
+        self.downsampling_factor = downsampling_factor
+        self.bidirectional_scanning = bidirectional_scanning
 
+        self._fish_configs_cache = {}
 
-downsampling_factor: int = 5,
-bidirectional_scanning = True
+    def _load_fish_config(self, filepath: Path) -> Dict[str, Any]:
+        """Dynamically import a fish config .py file and return its globals."""
+        if filepath in self._fish_configs_cache:
+            return self._fish_configs_cache[filepath]
+
+        spec = importlib.util.spec_from_file_location(filepath.stem, filepath)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)  # type: ignore
+
+        # Collect relevant attributes (skip builtins and imports)
+        config_vars = {k: v for k, v in vars(module).items()
+                       if not k.startswith('_') and not callable(v)}
+
+        self._fish_configs_cache[filepath] = config_vars
+        return config_vars
+
+    def load_all_fish_configs(self) -> Dict[str, Dict[str, Any]]:
+        """Load all .py config files in the config path."""
+        fish_configs = {}
+        for filepath in self.config_path.glob("*.py"):
+            config_data = self._load_fish_config(filepath)
+            fish_name = filepath.stem
+            fish_configs[fish_name] = config_data
+        self._fish_configs_by_name = fish_configs
+        return fish_configs
+
+    def get_fish_config(self, fish_id: str) -> Dict[str, Any]:
+        """Load a single fish config by ID (filename without .py)."""
+        file_path = self.config_path / f"{fish_id}.py"
+        if not file_path.exists():
+            raise FileNotFoundError(f"No config found for fish ID: {fish_id}")
+        return self._load_fish_config(file_path)
+
+    def clear_cache(self):
+        """Reset all cached config files."""
+        self._fish_configs_cache.clear()
+
+    def get_loaded_fish_ids(self) -> list[str]:
+        """Return list of fish IDs currently cached (from load_all_fish_configs)."""
+        return list(self._fish_configs_by_name.keys())
+

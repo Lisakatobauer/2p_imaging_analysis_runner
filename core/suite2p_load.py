@@ -1,13 +1,6 @@
-import os
-import shutil
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 import numpy as np
-import logging
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 class Suite2pDataLoader:
@@ -98,6 +91,7 @@ class Suite2pDataLoader:
 
         return loaded_data
 
+    @property
     def load_or_process_data(self) -> Dict[str, List]:
         """
         Load existing Suite2p data or process if not available.
@@ -110,21 +104,22 @@ class Suite2pDataLoader:
 
         loaded_data = {}
         try:
-            logger.info(f"Attempting to load existing data for hash: {self.run_hash}")
+            print(f"Attempting to load existing data for hash: {self.run_hash}")
             for plane_n in range(self.number_planes):
                 loaded_data[str(plane_n)] = self._load_plane_data(plane_n)
             self.isloaded = True
-            logger.info("Successfully loaded existing Suite2p data")
+            print("Successfully loaded existing Suite2p data")
 
             try:
-                logger.info("Attempting to load newly processed data...")
+                print("Attempting to load processed suite2p data...")
                 for plane_n in range(self.number_planes):
                     loaded_data[str(plane_n)] = self._load_plane_data(plane_n)
                 self.isloaded = True
-                logger.info("Successfully loaded processed data")
+                print("Successfully loaded processed data")
             except Exception as e:
-                logger.error(f"Failed to load data after processing: {e}")
-                raise RuntimeError("Suite2p processing failed") from e
+                print(f"Failed to load processed suite2p data: {e}")
+        except Exception as e:
+            print(f"Failed to load existing suite2p data: {e}")
 
         self._suite2p_cache = loaded_data
         return loaded_data
@@ -133,7 +128,7 @@ class Suite2pDataLoader:
     def suite2p_data(self) -> Dict[str, List]:
         """Property to access Suite2p data with lazy loading."""
         if self._suite2p_cache is None:
-            self._suite2p_cache = self.load_or_process_data()
+            self._suite2p_cache = self.load_or_process_data
         return self._suite2p_cache
 
     def get_fluorescence_traces(self, plane_n: int = 0) -> np.ndarray:
