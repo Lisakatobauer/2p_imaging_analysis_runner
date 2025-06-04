@@ -18,27 +18,18 @@ from utils import utils
 from utils.processingunit import ProcessingUnit
 from usage_examples.data.lisa_ops import cellpose_model_ops
 
-output_dir = utils.get_git_root() / 'options'
+output_dir = utils.get_git_root() / 'usage_examples' / 'data'
 classifier_file = os.path.join(output_dir, 'EK_classifier16012020.npy')
 
 
-class Suite2pRun(ProcessingUnit):
+class Suite2pProcessor(ProcessingUnit):
     """
-    Runs suite2p in stages from python. Perform ROI detection on downsampled frames.
+    Runs suite2p pipeline across experiments in stages from python. Perform ROI detection on downsampled frames.
     """
 
     def __init__(
-            self,
-            suite2ppath_raw: str,
-            suite2ppath_processed: str,
-            fishnum: int,
-            framerate: float,
-            number_planes: int,
-            experiments: Dict,
-            experiment_lengths: Dict,
-            downsampling_factor: int = 5,
-            classifierfile: Optional[str] = None,
-            bidirectional_scanning=True
+            self, config:Suite2pConfig,
+
     ):
 
         """
@@ -57,6 +48,7 @@ class Suite2pRun(ProcessingUnit):
         """
 
         super().__init__(suite2ppath_processed)
+        self.config = config
         self.your_ops = cellpose_model_ops
         self.suite2ppath_raw = suite2ppath_raw
         self.suite2ppath_processed = suite2ppath_processed
@@ -73,6 +65,8 @@ class Suite2pRun(ProcessingUnit):
         self.volumerate = self.framerate
         self.downsample_volumerate = self.volumerate / self.downsampling_factor
         self.date = list(self.experiments.keys())[0]
+
+        self._validate_inputs()
 
         # Initialize paths
         self.downsampled_filename = None
@@ -109,7 +103,7 @@ class Suite2pRun(ProcessingUnit):
             if self.classifierfile:
                 self.apply_classifier()
 
-        self.split_experiments_and_save_fluorescence()
+        self.split_experiments_and_save_outputs()
 
     def run_extraction_hashed(self, config):
         # Check for existing matching run
@@ -431,7 +425,7 @@ class Suite2pRun(ProcessingUnit):
         iscell = classification.Classifier(self.classifierfile, keys=['npix_norm', 'compact', 'skew']).run(stat)
         np.save(os.path.join(os.path.join(self.plane_save_path, 'suite2p/plane0'), 'iscell_classifier.npy'), iscell)
 
-    def split_experiments_and_save_fluorescence(self) -> None:
+    def split_experiments_and_save_outputs(self) -> None:
         """Split and save fluorescence data by experiment."""
         experiment_ns = list(self.experiments[self.date].keys())
         last_experiment = os.path.join(
@@ -511,6 +505,30 @@ class Suite2pRun(ProcessingUnit):
             ops.update(self.your_ops)
         return ops
 
+    def _initialize_suite2p_processor(self) -> Suite2pRun:
+        """Initialize and configure the Suite2p processor."""
+        return Suite2pRun(
+            str(self.suite2ppath_raw),
+            str(self.suite2ppath_processed),
+            self.animalnum,
+            self.framerate,
+            self.imagingfiles,
+            self.number_planes,
+            self.experiments,
+            self.experiment_lengths
+        )
+
+    processor = self._initialize_suite2p_processor()
+    self.run_hash = processor.define_run_hash(
+        your_ops=lisa_ops(),
+        motion_correction=True,
+        filtering=True,
+        downsampling=True
+    )
+    except (FileNotFoundError, AssertionError) as e:
+    logger.warning(f"Could not load existing data: {e}. Running Suite2p processing...")
+    processor.run_extraction(self.run_hash)
+
 
 def main():
     # Example configuration - replace with your actual paths and parameters
@@ -529,7 +547,7 @@ def main():
     }
 
     # Initialize and run the pipeline
-    pipeline = Suite2pRun(**config)
+    pipeline = Suite2pProcessor(**config)
     pipeline.run_extraction()
 
 

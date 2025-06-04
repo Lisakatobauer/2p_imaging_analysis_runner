@@ -2,7 +2,7 @@
 
 Using suite2p. 
 Based on code from Johannes Kappel. Classifier developed by Enrico Kohn and Katja Slangewal. Cellpose model from Inbal
-Shainer.
+Shainer. BiDiOffset function from Joseph Donovan. 
 
 This is supposed to be a analysis pipeline usable by other people, of 2p imaging data. 
 I want people to be able to plug and play, with minimal parameter setting, their data. 

@@ -1,5 +1,5 @@
 # Example configuration - replace with your actual paths and parameters
-from scripts.suite2p_run import classifier_file, Suite2pRun
+from core.suite2p_run import classifier_file, Suite2pProcessor
 
 config = {
     'suite2ppath_raw': 'J:\\_Projects\\Lisa\\rawdata',
@@ -16,5 +16,5 @@ config = {
 }
 
 # Initialize and run the pipeline
-pipeline = Suite2pRun(**config)
+pipeline = Suite2pProcessor(**config)
 pipeline.run_extraction_hashed(config)

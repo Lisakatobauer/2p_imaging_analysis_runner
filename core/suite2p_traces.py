@@ -24,13 +24,7 @@ class Suite2pTraces:
 
     def __init__(
             self,
-            animalnum: int,
-            exptype: str,
-            expnum: Union[int, str],
-            suite2p,
-            number_planes: int,
-            framerate: float,
-            force_processing: bool = False
+            traces, framerate
     ):
         """
         Initialize the Suite2p traces processor.
@@ -61,12 +55,6 @@ class Suite2pTraces:
         self.base_path = processedfilepath(self.animalnum, self.exptype, self.expnum)
         Path(self.base_path).mkdir(parents=True, exist_ok=True)
 
-    def _load_raw_traces(self, suite2p) -> Dict[int, np.ndarray]:
-        """Load raw traces from Suite2p for all planes."""
-        logger.info("Loading raw Suite2p traces...")
-        return {plane: suite2p.ftracescells(plane_n=plane)
-                for plane in range(self.number_planes)}
-
     def get_trace_path(self, plane: int, trace_type: str) -> Path:
         """Get path for a specific trace type and plane."""
         if trace_type not in self.TRACE_TYPES:
@@ -89,20 +77,7 @@ class Suite2pTraces:
             logger.error(f"Error saving traces for plane {plane}: {e}")
             raise
 
-    def load_traces(self, plane: int) -> None:
-        """Load processed traces for a specific plane."""
-        logger.info(f"Loading processed traces for plane {plane}")
-        try:
-            for trace_type in self.TRACE_TYPES:
-                trace_path = self.get_trace_path(plane, trace_type)
-                if trace_path.exists():
-                    self.processed_data[trace_type][plane] = np.load(trace_path, allow_pickle=True)
 
-            self.load_status[plane] = True
-            self.process_status[plane] = True
-        except Exception as e:
-            logger.error(f"Error loading traces for plane {plane}: {e}")
-            raise
 
     def process_all_planes(self) -> Dict[int, np.ndarray]:
         """Process traces for all planes."""
@@ -160,6 +135,8 @@ class Suite2pTraces:
 
         traces = self.ftracescells[plane].astype(np.float32)
         processed = np.empty_like(traces)
+
+        # TODO maybe implement processors?
 
         for cell in range(traces.shape[0]):
             trace = traces[cell, :]
@@ -230,3 +207,18 @@ class Suite2pTraces:
         else:
             return {p: self.get_processed_traces(p, trace_type)
                     for p in range(self.number_planes)}
+
+    def load_traces(self, plane: int) -> None:
+        """Load processed traces for a specific plane."""
+        logger.info(f"Loading processed traces for plane {plane}")
+        try:
+            for trace_type in self.TRACE_TYPES:
+                trace_path = self.get_trace_path(plane, trace_type)
+                if trace_path.exists():
+                    self.processed_data[trace_type][plane] = np.load(trace_path, allow_pickle=True)
+
+            self.load_status[plane] = True
+            self.process_status[plane] = True
+        except Exception as e:
+            logger.error(f"Error loading traces for plane {plane}: {e}")
+            raise

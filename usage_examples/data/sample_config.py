@@ -1,4 +1,4 @@
-from scripts.suite2p_run import classifier_file
+from core.suite2p_run import classifier_file
 
 config = {
     'suite2ppath_raw': 'J:\\_Projects\\Lisa\\rawdata',
