@@ -3,7 +3,7 @@ from typing import Dict, List, Union
 import numpy as np
 
 
-class Suite2pDataLoader:
+class Suite2pLoader:
     """A class to load and manage Suite2p processed data with caching and coordinate transformations."""
 
     def __init__(
@@ -120,6 +120,8 @@ class Suite2pDataLoader:
                 print(f"Failed to load processed suite2p data: {e}")
         except Exception as e:
             print(f"Failed to load existing suite2p data: {e}")
+
+            # TODO maybe let people run processor/traces from here?
 
         self._suite2p_cache = loaded_data
         return loaded_data

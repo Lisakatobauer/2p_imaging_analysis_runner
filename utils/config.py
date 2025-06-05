@@ -12,6 +12,7 @@ class Suite2pConfig:
                  classifier_file: Optional[Path] = None,
                  downsampling_factor: int = 5,
                  bidirectional_scanning: bool = True):
+        self.one_fish = False
         self._fish_configs_by_name = None
         self.config_path = Path(config_path)
         self.raw_path = Path(raw_path)
@@ -51,9 +52,11 @@ class Suite2pConfig:
 
     def get_fish_config(self, fish_id: str) -> Dict[str, Any]:
         """Load a single fish config by ID (filename without .py)."""
-        file_path = self.config_path / f"{fish_id}.py"
+        file_path = self.config_path / f"fish_{fish_id}.py"
         if not file_path.exists():
             raise FileNotFoundError(f"No config found for fish ID: {fish_id}")
+        self.one_fish = True
+        self._fish_configs_by_name = fish_id
         return self._load_fish_config(file_path)
 
     def clear_cache(self):
@@ -62,5 +65,10 @@ class Suite2pConfig:
 
     def get_loaded_fish_ids(self) -> list[str]:
         """Return list of fish IDs currently cached (from load_all_fish_configs)."""
-        return list(self._fish_configs_by_name.keys())
+        if self.one_fish:
+            fish_ids = self._fish_configs_by_name
+        else:
+            fish_ids = list(self._fish_configs_by_name.keys())
+
+        return fish_ids
 
