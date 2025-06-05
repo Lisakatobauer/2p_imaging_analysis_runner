@@ -422,7 +422,7 @@ class Suite2pProcessor(ProcessingUnit):
         """Split and save fluorescence data by experiment."""
         experiment_ns = list(self.experiments[self.date].keys())
         last_experiment = os.path.join(
-            self.suite2ppath_processed, f'Fish_{self.fishnum}', f'{experiment_ns[-1]}', 'suite2p',
+            self.suite2ppath_processed, f'Fish_{self.fishnum}', f'{int(experiment_ns[-1])}', 'suite2p',
             f'plane{self.number_planes - 1}', 'spks.npy'
         )
 
