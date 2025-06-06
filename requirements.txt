@@ -1,8 +1,7 @@
 numpy>=1.24.4
-tifffile~=2024.8.30
-scikit-image~=0.24.0
-scipy~=1.13.1
-suite2p~=0.14.4
-importlib_metadata~=7.0.1
-importlib-metadata~=7.0.1
+tifffile>=2024.8.30
+scikit-image>=0.24.0
+scipy>=1.13.1
+suite2p>=0.14.4
+importlib-metadata>=7.0.1
 scikit-learn>=1.5.1

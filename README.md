@@ -7,17 +7,15 @@ A modular, plug-and-play pipeline for **2-photon calcium imaging** data using [S
 ## 🔧 Features
 
 - ✅ **Suite2p integration** with multi-experiment compatibility  
-- ✅ **Plane-aware support** (Z-stack / multiplane data)  
-- ✅ **Minimal configuration** required per experiment  
-- ✅ **Run hashing** to ensure reproducibility of analyses  
-- ✅ **Trace extraction** (raw, dF/F, z-score)  
+- ✅ **Plane-aware support** (Z-stack / multiplane data)
+- ✅ **Run hashing** to ensure reproducibility of analyses
 - ✅ **Postprocessing and visualization** with customizable outputs  
 
 ---
 
-## ✍️ Authorship & Credits
+## ✍️ Credits
 
-- **Johannes Kappel** – Core pipeline foundation  
+- **Johannes Kappel** – Original Suite2p analysis code
 - **Enrico Kohn** & **Katja Slangewal** – Classifier design  
 - **Inbal Shainer** – Cellpose model  
 - **Joseph Donovan** – BiDiOffset utility  
