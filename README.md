@@ -25,8 +25,8 @@ A modular, plug-and-play pipeline for **2-photon calcium imaging** data using [S
 ## Installation
 
 ```bash
-git clone https://github.com/lisakatobauer/2p_imaging_analysis_runner.git
-cd 2p_imaging_analysis_runner
+git clone https://github.com/lisakatobauer/functional_imaging_analysis_runner.git
+cd functional_imaging_analysis_runner
 pip install -e .
 ````
 
