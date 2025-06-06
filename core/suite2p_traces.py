@@ -7,9 +7,21 @@ from typing import Dict, Optional, Union
 
 
 class Suite2pTraces:
+    """
+    Runs processing of suite2p outputted fluorescent traces.
+    """
     TRACE_TYPES = ['dff', 'zscore', 'dff_smooth', 'zscore_smooth']
 
     def __init__(self, config, fishnum):
+
+        """
+        Initialize Suite2p traces processing.
+
+        Args:
+            config: instance of config
+            fishnum: your fishnum
+        """
+
         self.config = config
         self.fishnum = fishnum
         self.suite2p_ops = config.suite2p_ops

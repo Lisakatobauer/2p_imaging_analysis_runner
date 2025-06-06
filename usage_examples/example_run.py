@@ -1,6 +1,5 @@
 from core.suite2p_processor import classifier_file, Suite2pProcessor
 from core.suite2p_traces import Suite2pTraces
-from core.suite2p_visualiser import Suite2pVisualiser
 from utils.config import Suite2pConfig
 from utils.utils import get_git_root
 
@@ -32,6 +31,3 @@ for fishnum in fish_ids:
 for fishnum in fish_ids:
     traces = Suite2pTraces(config, fishnum)
     traces.process_all()
-
-
-

@@ -1,5 +1,6 @@
 from core.suite2p_loader import Suite2pLoader
-from core.suite2p_processor import classifier_file, Suite2pProcessor
+from core.suite2p_processor import classifier_file
+from core.suite2p_visualiser import Suite2pVisualiser
 from utils.config import Suite2pConfig
 from utils.utils import get_git_root
 
@@ -16,18 +17,21 @@ config = Suite2pConfig(
     processed_path,
     suite2p_ops)
 
-config.load_all_fish_configs()
+# config.load_all_fish_configs()
+config.get_fish_config(125)
+fish_ids = config.get_loaded_fish_ids()
+experiment_n = 1
 
-# 2. Initialize and run the processor
-
-for fishnum in config.get_loaded_fish_ids():
-    loader = Suite2pLoader(config, fishnum)
-    loader.run_extraction()
-
-# 5. Do some data visualization
+# 2. Initialize and run the loader
 
 for fishnum in fish_ids:
-    visualiser = Suite2pVisualiser(config, fishnum)
-    visualiser.plot_highly_active()
-    visualiser.plot_location()
-    visualiser.plot_heatmap()
+    loader = Suite2pLoader(config, fishnum, experiment_n)
+    data = loader.get_basic_data()
+
+# 3. Do some data visualization
+
+    visualiser = Suite2pVisualiser(data, config, fishnum, experiment_n)
+    visualiser.plot_highly_active(save_plot=True)
+    visualiser.plot_location(save_plot=True)
+    visualiser.plot_heatmap(save_plot=True)
+

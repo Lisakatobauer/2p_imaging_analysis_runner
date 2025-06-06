@@ -35,7 +35,8 @@ class Suite2pProcessor(ProcessingUnit):
         Initialize Suite2p processing pipeline.
 
         Args:
-            config: instance of config path
+            config: instance of config
+            fishnum: your fishnum
         """
 
         super().__init__(config.processed_path)
@@ -51,7 +52,7 @@ class Suite2pProcessor(ProcessingUnit):
         self.classifierfile = self.setup_data.get('classifierfile', None)
         self.bidirectional_scanning = self.setup_data.get('bidirectional_scanning', True)
 
-        self.fishnum = int(re.findall(r'\d+', fishnum)[0])
+        self.fishnum = fishnum
         self.fishdata = config.get_fish_config(fishnum)
         self.experiments = self.fishdata['experiments']
         self.experiment_lengths = self.fishdata['experiment_lengths']
@@ -98,16 +99,16 @@ class Suite2pProcessor(ProcessingUnit):
 
         self.split_experiments_and_save_outputs()
 
-    def run_extraction_hashed(self, config):
+    def run_extraction_hashed(self):
         # Check for existing matching run
-        existing_run = self.find_matching_run(config)
+        existing_run = self.find_matching_run(self.config)
         if existing_run:
             print(f"Using existing run with hash {existing_run}")
             self.run_hash = existing_run
             return
 
         # Setup new run
-        self.run_hash = self.setup_run(config)
+        self.run_hash = self.setup_run(self.config)
         self.current_ops = self._get_full_ops()
 
         # Rest of your processing pipeline...

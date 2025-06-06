@@ -1,6 +1,8 @@
 import hashlib
 import json
 import os
+from pathlib import Path
+
 import numpy as np
 from datetime import datetime
 from typing import Dict, Any, Optional, List
@@ -33,26 +35,30 @@ class ProcessingUnit:
         """Get the root directory for storing run hashes."""
         return os.path.join(self.processing_path, 'run_hashes')
 
-    def generate_run_hash(self, config: Dict) -> str:
+    def generate_run_hash(self, config) -> str:
         """
         Generate a unique hash for the current run configuration.
 
         Args:
-            config: Dictionary containing all relevant configuration parameters
+            config: Object containing all relevant configuration parameters
 
         Returns:
             str: MD5 hash of the configuration
         """
         # Convert to JSON string for consistent hashing
-        hash_str = json.dumps(config, sort_keys=True, default=self._json_serializer)
+        config_dict = config.to_dict()
+        hash_str = json.dumps(config_dict, sort_keys=True, default=self._json_serializer)
         return hashlib.md5(hash_str.encode()).hexdigest()
 
-    def _json_serializer(self, obj) -> Any:
+    @staticmethod
+    def _json_serializer(obj) -> Any:
         """Custom JSON serializer for non-standard types."""
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         if hasattr(obj, '__dict__'):
             return obj.__dict__
+        if isinstance(obj, Path):
+            return str(obj)
         raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
     def setup_run(self, run_params: Dict) -> str:

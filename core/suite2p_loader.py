@@ -1,164 +1,214 @@
-from pathlib import Path
-from typing import Dict, List, Union
+import warnings
+from typing import Dict, Union, List
 import numpy as np
+from dataclasses import dataclass
+from skimage import io as skio
+
+
+@dataclass
+class Suite2pData:
+    """Container for Suite2p processed data"""
+    traces: List[np.ndarray]  # Fluorescence traces
+    coords: List[np.ndarray]  # cell coords, 2D
+    tif_average: List[np.ndarray]  # Average projection image [512, 512]
+    framerate: float  # Imaging frame rate
 
 
 class Suite2pLoader:
-    """A class to load and manage Suite2p processed data with caching and coordinate transformations."""
+    """
+    loads suite2p pipeline output.
+    """
+    def __init__(self, config, fishnum, experiment_n):
 
-    def __init__(
-            self,
-            suite2ppath_processed: str,
-            suite2ppath_raw: str,
-            imagingfiles: List[str],
-            exptype: str,
-            expnum: Union[int, str],
-            animalnum: Union[int, str],
-            number_planes: int,
-            experiments: Dict,
-            framerate: float,
-            date: str,
-            experiment_lengths: Dict
-    ):
         """
-        Initialize the Suite2p data loader.
+        Initialize Suite2p loader.
 
         Args:
-            suite2ppath_processed: Path to processed Suite2p data
-            suite2ppath_raw: Path to raw imaging data
-            imagingfiles: List of imaging files
-            exptype: Experiment type identifier
-            expnum: Experiment number
-            animalnum: Animal identifier
-            number_planes: Number of imaging planes
-            experiments: Dictionary of experiment metadata
-            framerate: Imaging frame rate (Hz)
-            date: Experiment date
-            experiment_lengths: Dictionary of experiment lengths
+            config: instance of config
+            fishnum: your fishnum
         """
-        self.suite2ppath_processed = Path(suite2ppath_processed)
-        self.suite2ppath_raw = Path(suite2ppath_raw)
-        self.imagingfiles = imagingfiles
-        self.exptype = exptype
-        self.expnum = expnum
-        self.animalnum = animalnum
-        self.number_planes = number_planes
-        self.experiments = experiments
-        self.framerate = framerate
-        self.date = date
-        self.experiment_lengths = experiment_lengths
 
-        # State tracking
-        self._suite2p_cache = None
+        self.config = config
+        self.fishnum = fishnum
+
+        self.suite2ppath_processed = self.config.processed_path
+        self.setup_data = config.suite2p_ops
+        self.number_planes = self.setup_data.get('number_planes', 1)
+        self.experiment_n = experiment_n
+
+        self._suite2p = {}
+        self._optional_data = {}
         self.isloaded = False
-        self.isprocessed = False
-        self.run_hash = None
 
-        # Ensure directories exist
         self._ensure_directories()
 
-    def _ensure_directories(self) -> None:
-        """Ensure required directories exist."""
+    def _ensure_directories(self):
         self.suite2ppath_processed.mkdir(parents=True, exist_ok=True)
 
-    def _load_plane_data(self, plane_n: int) -> List:
-        """
-        Load data for a specific plane.
+    def _load(self, plane_n: int):
+        required = ["stat.npy", "iscell.npy", "F.npy", "ops.npy", "spks.npy"]
+        takeitem = [False, False, False, True, False]
+        folder = (self.suite2ppath_processed / f'Fish_{self.fishnum}' /
+                  f'{self.experiment_n}' / 'suite2p' / f'plane{plane_n}')
 
-        Args:
-            plane_n: Plane index to load
+        data = []
+        for i, fname in enumerate(required):
+            fpath = folder / fname
+            if not fpath.exists():
+                raise FileNotFoundError(f"Missing required file: {fpath}")
+            loaded = np.load(fpath, allow_pickle=True)
+            if takeitem[i]:
+                loaded = loaded.item()
+            data.append(loaded)
 
-        Returns:
-            List containing [stat, iscell, F, ops, spks] data
-        """
-        files_to_load = ["stat.npy", "iscell.npy", "F.npy", "ops.npy", "spks.npy"]
-        plane_path = self.suite2ppath_processed / f'plane{plane_n}'
+        self._suite2p[str(plane_n)] = data
 
-        if not plane_path.exists():
-            raise FileNotFoundError(f"Plane directory not found: {plane_path}")
-
-        loaded_data = []
-        for file in files_to_load:
-            file_path = plane_path / file
-            if not file_path.exists():
-                raise FileNotFoundError(f"File not found: {file_path}")
-
-            data = np.load(file_path, allow_pickle=True)
-            # ops.npy needs .item() called on it
-            if file == "ops.npy":
-                data = data.item()
-            loaded_data.append(data)
-
-        return loaded_data
-
-    @property
-    def load_or_process_data(self) -> Dict[str, List]:
-        """
-        Load existing Suite2p data or process if not available.
-
-        Returns:
-            Dictionary mapping plane numbers to loaded data
-        """
-        if self._suite2p_cache is not None:
-            return self._suite2p_cache
-
-        loaded_data = {}
-        try:
-            print(f"Attempting to load existing data for hash: {self.run_hash}")
+    def _ensure_loaded(self):
+        if not self._suite2p:
             for plane_n in range(self.number_planes):
-                loaded_data[str(plane_n)] = self._load_plane_data(plane_n)
+                self._load(plane_n)
             self.isloaded = True
-            print("Successfully loaded existing Suite2p data")
 
-            try:
-                print("Attempting to load processed suite2p data...")
-                for plane_n in range(self.number_planes):
-                    loaded_data[str(plane_n)] = self._load_plane_data(plane_n)
-                self.isloaded = True
-                print("Successfully loaded processed data")
-            except Exception as e:
-                print(f"Failed to load processed suite2p data: {e}")
-        except Exception as e:
-            print(f"Failed to load existing suite2p data: {e}")
+    def _load_optional(self, plane_n: int, key: str) -> Union[np.ndarray, None]:
+        """
+        Lazily load optional files like 'zscore.npy', 'dff.npy', 'smoothed.npy'
+        """
+        if key not in self._optional_data:
+            self._optional_data[key] = {}
 
-            # TODO maybe let people run processor/traces from here?
+        if plane_n not in self._optional_data[key]:
+            path = self.suite2ppath_processed / f"plane{plane_n}" / f"{key}.npy"
+            if not path.exists():
+                warnings.warn(f"Optional file missing: {key}.npy for plane {plane_n}")
+                self._optional_data[key][plane_n] = None
+            else:
+                self._optional_data[key][plane_n] = np.load(path, allow_pickle=True)
 
-        self._suite2p_cache = loaded_data
-        return loaded_data
+        return self._optional_data[key][plane_n]
 
     @property
-    def suite2p_data(self) -> Dict[str, List]:
-        """Property to access Suite2p data with lazy loading."""
-        if self._suite2p_cache is None:
-            self._suite2p_cache = self.load_or_process_data
-        return self._suite2p_cache
+    def suite2p_data(self):
+        self._ensure_loaded()
+        return self._suite2p
 
-    def get_fluorescence_traces(self, plane_n: int = 0) -> np.ndarray:
-        """Get fluorescence traces for specified plane, filtered by cell IDs."""
-        cell_ids = self.get_cell_ids(plane_n)
-        return self.suite2p_data[str(plane_n)][2][cell_ids, :]
+    def ftracesrois(self, plane_n=0):
+        return self.suite2p_data[str(plane_n)][2]
 
-    def get_spike_traces(self, plane_n: int = 0) -> np.ndarray:
-        """Get spike traces for specified plane, filtered by cell IDs."""
-        cell_ids = self.get_cell_ids(plane_n)
-        return self.suite2p_data[str(plane_n)][4][cell_ids, :]
+    def s2p_spks(self, plane_n=0):
+        return self.suite2p_data[str(plane_n)][4]
 
-    def get_cell_ids(self, plane_n: int = 0) -> np.ndarray:
-        """Get valid cell IDs for a plane."""
-        iscell_data = self.suite2p_data[str(plane_n)][1]
-        ftraces = self.suite2p_data[str(plane_n)][2]
-
-        # Get ROI indices where fluorescence trace has variation
-        roi_indices = [i for i, trace in enumerate(ftraces) if len(set(trace)) > 1]
-        cell_ids = iscell_data[:, 0].copy()
-        cell_ids[roi_indices] = 0  # Mark non-cell ROIs
-        return np.nonzero(cell_ids)[0]
-
-    def get_statistics(self, plane_n: int = 0) -> np.ndarray:
-        """Get statistics for specified plane."""
+    def s2p_stats(self, plane_n=0):
         return self.suite2p_data[str(plane_n)][0]
 
-    def get_ops(self, plane_n: int = 0) -> Dict:
-        """Get ops configuration for specified plane."""
+    def s2p_ops(self, plane_n=0):
         return self.suite2p_data[str(plane_n)][3]
 
+    def zscore(self, plane_n=0):
+        return self._load_optional(plane_n, 'zscore_traces')
+
+    def dff(self, plane_n=0):
+        return self._load_optional(plane_n, 'dff_traces')
+
+    def smoothed_dff(self, plane_n=0):
+        return self._load_optional(plane_n, 'zscore_smoothed_traces')
+
+    def smoothed_zscore(self, plane_n=0):
+        return self._load_optional(plane_n, 'dff_smoothed_traces')
+
+    def cellid(self, plane_n=0):
+        rois = self.ftracesrois(plane_n)
+        iscell = self.suite2p_data[str(plane_n)][1][:, 0].copy()
+        no_var = [i for i, trace in enumerate(rois) if len(set(trace)) == 1]
+        iscell[no_var] = 0
+        return np.nonzero(iscell)[0]
+
+    def ftracescells(self, plane_n=0):
+        return self.ftracesrois(plane_n)[self.cellid(plane_n), :]
+
+    def spkscells(self, plane_n=0):
+        return self.s2p_spks(plane_n)[self.cellid(plane_n), :]
+
+    def zscorecells(self, plane_n=0):
+        data = self.zscore(plane_n)
+        return data[self.cellid(plane_n), :] if data is not None else None
+
+    def dffcells(self, plane_n=0):
+        data = self.dff(plane_n)
+        return data[self.cellid(plane_n), :] if data is not None else None
+
+    def smoothed_dffcells(self, plane_n=0):
+        data = self.smoothed_dff(plane_n)
+        return data[self.cellid(plane_n), :] if data is not None else None
+
+    def smoothed_zscorecells(self, plane_n=0):
+        data = self.smoothed_zscore(plane_n)
+        return data[self.cellid(plane_n), :] if data is not None else None
+
+    def rawtif(self, plane_n=0):
+        """Loads the raw merged TIFF for a given plane."""
+        tif_path = (
+                self.suite2ppath_processed /
+                f'Fish_{self.fishnum}' / 'suite2p' / f'plane{plane_n}' /
+                'merge_exp001_plane0_rec0_raw.tif'
+        )
+        if not tif_path.exists():
+            raise FileNotFoundError(f"Raw TIFF not found: {tif_path}")
+        tif_stack = skio.imread(str(tif_path), plugin='tifffile')
+        return tif_stack
+
+    def _tif_mean_path(self, plane_n=0):
+        """Returns the path for the cached mean image .npy file."""
+        return (
+                self.suite2ppath_processed /
+                f'Fish_{self.fishnum}' / 'suite2p' / f'plane{plane_n}' /
+                'mean_image.npy'
+        )
+
+    def tif_mean_image(self, plane_n=0):
+        """
+        Returns the mean image of the raw TIFF stack.
+        Loads from cache if it exists, otherwise computes and saves.
+        """
+        mean_path = self._tif_mean_path(plane_n)
+        if mean_path.exists():
+            return np.load(mean_path)
+
+        # Load full TIFF and compute mean
+        mean_img = self.rawtif(plane_n).mean(axis=0)
+        np.save(mean_path, mean_img)
+        return mean_img
+
+    def get_basic_data(self, plane_n=0, transform: str = None) -> Dict[str, Union[np.ndarray, None, Suite2pData]]:
+        """
+        Returns a dict with 'traces', 'coordinates', and 'suite2p_data' for given plane.
+
+        Args:
+            plane_n: Plane index to query
+            transform: One of [None, 'raw', 'zscore', 'dff', 'smoothed']
+
+        Returns:
+            Dict with keys: 'traces', 'coordinates', 'suite2p_data'
+        """
+        coords = np.array([s['med'] for s in self.s2p_stats(plane_n)])
+        cell_coords = coords[self.cellid(plane_n)]
+
+        trace_map = {
+            None: self.ftracescells,
+            'raw': self.ftracescells,
+            'zscore': self.zscorecells,
+            'dff': self.dffcells,
+            'smoothed_dff': self.smoothed_dffcells,
+            'smoothed_zscore': self.smoothed_zscorecells
+        }
+
+        if transform not in trace_map:
+            raise ValueError(f"Unknown transform type: {transform}")
+
+        suite2p_data = Suite2pData(
+            traces=trace_map[transform](plane_n),
+            coords=cell_coords,
+            tif_average=self.tif_mean_image(plane_n),
+            framerate=self.config.suite2p_ops.get('framerate', 1.0)
+        )
+
+        return suite2p_data

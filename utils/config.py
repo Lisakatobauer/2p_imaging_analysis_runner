@@ -66,9 +66,20 @@ class Suite2pConfig:
     def get_loaded_fish_ids(self) -> list[str]:
         """Return list of fish IDs currently cached (from load_all_fish_configs)."""
         if self.one_fish:
-            fish_ids = self._fish_configs_by_name
+            fish_ids = [self._fish_configs_by_name]
         else:
             fish_ids = list(self._fish_configs_by_name.keys())
 
         return fish_ids
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            'config_path': str(self.config_path),
+            'raw_path': str(self.raw_path),
+            'processed_path': str(self.processed_path),
+            'suite2p_ops': self.suite2p_ops,
+            'classifier_file': str(self.classifier_file) if self.classifier_file else None,
+            'downsampling_factor': self.downsampling_factor,
+            'bidirectional_scanning': self.bidirectional_scanning
+        }
 
