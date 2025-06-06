@@ -8,9 +8,9 @@ from skimage import io as skio
 @dataclass
 class Suite2pData:
     """Container for Suite2p processed data"""
-    traces: List[np.ndarray]  # Fluorescence traces
-    coords: List[np.ndarray]  # cell coords, 2D
-    tif_average: List[np.ndarray]  # Average projection image [512, 512]
+    traces: np.ndarray  # shape: (n_cells, n_timepoints)
+    coords: np.ndarray  # shape: (n_cells, 2)
+    tif_average: np.ndarray  # shape: (height, width)
     framerate: float  # Imaging frame rate
 
 
@@ -18,6 +18,7 @@ class Suite2pLoader:
     """
     loads suite2p pipeline output.
     """
+
     def __init__(self, config, fishnum, experiment_n):
 
         """
@@ -77,7 +78,8 @@ class Suite2pLoader:
             self._optional_data[key] = {}
 
         if plane_n not in self._optional_data[key]:
-            path = self.suite2ppath_processed / f"plane{plane_n}" / f"{key}.npy"
+            path = (self.suite2ppath_processed / f'Fish_{self.fishnum}' / f'{self.experiment_n}'
+                    / f"plane{plane_n}" / f"{key}.npy")
             if not path.exists():
                 warnings.warn(f"Optional file missing: {key}.npy for plane {plane_n}")
                 self._optional_data[key][plane_n] = None
@@ -109,16 +111,16 @@ class Suite2pLoader:
     def dff(self, plane_n=0):
         return self._load_optional(plane_n, 'dff_traces')
 
-    def smoothed_dff(self, plane_n=0):
+    def dff_smooth(self, plane_n=0):
         return self._load_optional(plane_n, 'zscore_smoothed_traces')
 
-    def smoothed_zscore(self, plane_n=0):
+    def zscore_smooth(self, plane_n=0):
         return self._load_optional(plane_n, 'dff_smoothed_traces')
 
     def cellid(self, plane_n=0):
         rois = self.ftracesrois(plane_n)
         iscell = self.suite2p_data[str(plane_n)][1][:, 0].copy()
-        no_var = [i for i, trace in enumerate(rois) if len(set(trace)) == 1]
+        no_var = [i for i, trace in enumerate(rois) if np.all(trace == trace[0])]  # len(set(trace)) == 1]
         iscell[no_var] = 0
         return np.nonzero(iscell)[0]
 
@@ -137,11 +139,11 @@ class Suite2pLoader:
         return data[self.cellid(plane_n), :] if data is not None else None
 
     def smoothed_dffcells(self, plane_n=0):
-        data = self.smoothed_dff(plane_n)
+        data = self.dff_smooth(plane_n)
         return data[self.cellid(plane_n), :] if data is not None else None
 
     def smoothed_zscorecells(self, plane_n=0):
-        data = self.smoothed_zscore(plane_n)
+        data = self.zscore_smooth(plane_n)
         return data[self.cellid(plane_n), :] if data is not None else None
 
     def rawtif(self, plane_n=0):
@@ -178,16 +180,16 @@ class Suite2pLoader:
         np.save(mean_path, mean_img)
         return mean_img
 
-    def get_basic_data(self, plane_n=0, transform: str = None) -> Dict[str, Union[np.ndarray, None, Suite2pData]]:
+    def get_basic_data(self, plane_n=0, transform: str = None) -> Suite2pData:
         """
-        Returns a dict with 'traces', 'coordinates', and 'suite2p_data' for given plane.
+        Returns a dataclass object with 'traces', 'coordinates', and 'suite2p_data' for given plane.
 
         Args:
             plane_n: Plane index to query
             transform: One of [None, 'raw', 'zscore', 'dff', 'smoothed']
 
         Returns:
-            Dict with keys: 'traces', 'coordinates', 'suite2p_data'
+            Dataclass object: 'traces', 'coordinates', 'suite2p_data'
         """
         coords = np.array([s['med'] for s in self.s2p_stats(plane_n)])
         cell_coords = coords[self.cellid(plane_n)]
@@ -197,8 +199,8 @@ class Suite2pLoader:
             'raw': self.ftracescells,
             'zscore': self.zscorecells,
             'dff': self.dffcells,
-            'smoothed_dff': self.smoothed_dffcells,
-            'smoothed_zscore': self.smoothed_zscorecells
+            'dff_smooth': self.smoothed_dffcells,
+            'zscore_smooth': self.smoothed_zscorecells
         }
 
         if transform not in trace_map:

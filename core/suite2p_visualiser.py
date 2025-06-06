@@ -166,8 +166,9 @@ class Suite2pVisualiser:
         if metric == 'zscore':
             data = stats.zscore(traces, axis=1)
         else:  # dFF
-            data = (traces - np.median(traces, axis=1, keepdims=True)) / \
-                   np.median(traces, axis=1, keepdims=True)
+            median = np.median(traces, axis=1, keepdims=True)
+            median[median == 0] = 1e-3
+            data = (traces - median) / median
 
         # Cluster if requested
         if cluster:
