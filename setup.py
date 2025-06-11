@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='twop-imaging-pipeline',
+    name='twop-imaging-analysis-runner',
     version='0.1.0',
     description='A modular pipeline for analyzing 2-photon imaging data using Suite2p and custom components.',
     author='lisa Bauer',
