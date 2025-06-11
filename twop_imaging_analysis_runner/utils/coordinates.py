@@ -2,7 +2,7 @@
 from typing import Optional
 
 import numpy as np
-from config.base_config import processed_path
+from twop_imaging_analysis_runner.utils.config import processed_path
 
 # Constants for imaging parameters
 MICRONS_PER_PIXEL_ZSTACK_XY = 0.273  # Zoom 2x, 20x objective

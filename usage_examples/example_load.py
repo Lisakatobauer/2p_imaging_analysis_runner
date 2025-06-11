@@ -1,10 +1,10 @@
-from core.suite2p_loader import Suite2pLoader
-from core.suite2p_processor import classifier_file
-from core.suite2p_visualiser import Suite2pVisualiser
-from utils.config import Suite2pConfig
-from utils.utils import get_git_root
+from twop_imaging_analysis_runner.core import Suite2pLoader
+from twop_imaging_analysis_runner.core.suite2p_processor import classifier_file
+from twop_imaging_analysis_runner.core.suite2p_visualiser import Suite2pVisualiser
+from twop_imaging_analysis_runner.utils.config import Suite2pConfig
+from twop_imaging_analysis_runner.utils.utils import get_git_root
 
-from config.base_config import raw_path, processed_path
+from twop_imaging_analysis_runner.config.base_config import raw_path, processed_path
 
 # 1. Config
 config_path = get_git_root() / 'config' / 'configlist'

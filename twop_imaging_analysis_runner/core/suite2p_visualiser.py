@@ -8,7 +8,7 @@ from scipy import stats
 from typing import Optional
 from pathlib import Path
 
-from config.base_config import plot_path
+from twop_imaging_analysis_runner.config.base_config import plot_path
 
 
 class Suite2pVisualiser:

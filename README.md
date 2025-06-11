@@ -51,6 +51,8 @@ Example file can be found in /config/configlist.
 
 Example runs can be found in /usage_examples
 
+the /config/base_config.py file contains the pathing that should be defined by each user.
+
 ---
 
 ## 🔐 License

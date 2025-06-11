@@ -2,7 +2,6 @@ import glob
 import os
 import shutil
 import sys
-import re
 from typing import Dict
 
 import numpy as np
@@ -15,11 +14,11 @@ from suite2p import run_s2p, default_ops, classification
 from suite2p.io import BinaryFile
 from suite2p.registration.register import shift_frames_and_write
 
-from utils import utils
-from utils.config import Suite2pConfig
-from utils.processingunit import ProcessingUnit
+from twop_imaging_analysis_runner.utils import utils
+from twop_imaging_analysis_runner.utils.config import Suite2pConfig
+from twop_imaging_analysis_runner.utils.processingunit import ProcessingUnit
 from usage_examples.data.standard_ops import standard_ops
-from utils.utils import output_dir
+from twop_imaging_analysis_runner.utils.utils import output_dir
 
 classifier_file = os.path.join(output_dir, 'EK_classifier16012020.npy')
 

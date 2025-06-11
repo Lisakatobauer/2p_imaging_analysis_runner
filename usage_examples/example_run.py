@@ -1,9 +1,9 @@
-from core.suite2p_processor import classifier_file, Suite2pProcessor
-from core.suite2p_traces import Suite2pTraces
-from utils.config import Suite2pConfig
-from utils.utils import get_git_root
+from twop_imaging_analysis_runner.core.suite2p_processor import classifier_file, Suite2pProcessor
+from twop_imaging_analysis_runner.core import Suite2pTraces
+from twop_imaging_analysis_runner.utils.config import Suite2pConfig
+from twop_imaging_analysis_runner.utils.utils import get_git_root
 
-from config.base_config import raw_path, processed_path
+from twop_imaging_analysis_runner.config.base_config import raw_path, processed_path
 
 # 1. Config
 config_path = get_git_root() / 'config' / 'configlist'

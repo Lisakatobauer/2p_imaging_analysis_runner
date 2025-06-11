@@ -1,4 +1,4 @@
-# twop_imaging_pipeline/__init__.py
+# twop_imaging_pipeline/core/__init__.py
 
 from .suite2p_processor import Suite2pProcessor
 from .suite2p_traces import Suite2pTraces
