@@ -47,11 +47,11 @@ pip install -e .
 
 Each experiment requires a Python config file (e.g., `fish_1.py`) with information on the experiments.
 
-Example file can be found in /config/configlist. 
+Example file can be found in twop_imaging_analysis_runner/config/configlist. 
 
 Example runs can be found in /usage_examples
 
-the /config/base_config.py file contains the pathing that should be defined by each user.
+the twop_imaging_analysis_runner/config/base_config.py file contains the pathing that should be defined by each user.
 
 ---
 
