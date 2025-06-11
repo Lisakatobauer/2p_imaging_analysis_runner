@@ -45,7 +45,7 @@ pip install -e .
 
 ## 🚀 Getting Started
 
-Each experiment requires a Python config file (e.g., `fish_125.py`) with information on the experiments.
+Each experiment requires a Python config file (e.g., `fish_1.py`) with information on the experiments.
 
 Example file can be found in /config/configlist. 
 
