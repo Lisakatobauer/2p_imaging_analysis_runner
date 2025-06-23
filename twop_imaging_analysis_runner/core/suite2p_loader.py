@@ -113,10 +113,10 @@ class Suite2pLoader:
         return self._load_optional(plane_n, 'dff_traces')
 
     def dff_smooth(self, plane_n=0):
-        return self._load_optional(plane_n, 'dff_smoothed_traces')
+        return self._load_optional(plane_n, 'dff_smooth_traces')
 
     def zscore_smooth(self, plane_n=0):
-        return self._load_optional(plane_n, 'zscore_smoothed_traces')
+        return self._load_optional(plane_n, 'zscore_smooth_traces')
 
     def cellid(self, plane_n=0):
         rois = self.ftracesrois(plane_n)
