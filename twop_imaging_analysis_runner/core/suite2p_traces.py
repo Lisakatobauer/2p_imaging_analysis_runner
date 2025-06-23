@@ -35,11 +35,13 @@ class Suite2pTraces:
 
     def get_trace_path(self, experiment_number: str, plane: int) -> Path:
         """Returns the path to the raw F.npy trace file."""
-        return Path(self.config.processed_path) / f'Fish_{self.fishnum}' / experiment_number / 'suite2p' / f'plane{plane}' / 'F.npy'
+        return (Path(self.config.processed_path) / f'Fish_{self.fishnum}' / experiment_number / 'suite2p' /
+                f'plane{plane}' / 'F.npy')
 
     def get_save_path(self, experiment_number: str, plane: int, trace_type: str) -> Path:
         """Returns the path where the processed trace should be saved."""
-        plane_dir = Path(self.config.processed_path) / f'Fish_{self.fishnum}' / experiment_number / 'suite2p' / f'plane{plane}'
+        plane_dir = (Path(self.config.processed_path) / f'Fish_{self.fishnum}' / experiment_number / 'suite2p'
+                     / f'plane{plane}')
         plane_dir.mkdir(parents=True, exist_ok=True)
         return plane_dir / f'{trace_type}_traces.npy'
 
@@ -129,7 +131,8 @@ class Suite2pTraces:
         window = int(self.framerate * 5)
         return uniform_filter1d(trace, size=window)
 
-    def get_processed_traces(self, trace_type: str, plane: Optional[int] = None) -> Union[Dict[int, np.ndarray], np.ndarray]:
+    def get_processed_traces(self, trace_type: str,
+                             plane: Optional[int] = None) -> Union[Dict[int, np.ndarray], np.ndarray]:
         if trace_type not in self.TRACE_TYPES:
             raise ValueError(f"Invalid trace type: {trace_type}")
         if plane is not None:

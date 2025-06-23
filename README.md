@@ -34,12 +34,12 @@ pip install -e .
 
 ## 🏗️ Project Structure
 
-| Module               | Description                                                                 |
-|----------------------|-----------------------------------------------------------------------------|
-| `Suite2pProcessor`   | Prepares and runs Suite2p on multi-session data                             |
-| `Suite2pLoader`      | Loads processed Suite2p output                                              |
-| `Suite2pTraces`      | Extracts, filters, and normalizes fluorescence traces                       |
-| `Suite2pVisualiser`  | Visualizes ROI activity, top traces, and heatmaps                          |
+| Module              | Description                                           |
+|---------------------|-------------------------------------------------------|
+| `Suite2pProcessor`  | Prepares and runs Suite2p on multi-session data       |
+| `Suite2pLoader`     | Loads processed Suite2p output                        |
+| `Suite2pTraces`     | Extracts, filters, and normalizes fluorescence traces |
+| `Suite2pVisualiser` | Visualizes ROI activity, top traces, and heatmaps     |
 
 ---
 

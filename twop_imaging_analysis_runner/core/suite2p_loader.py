@@ -1,5 +1,5 @@
 import warnings
-from typing import Dict, Union, List
+from typing import Union
 import numpy as np
 from dataclasses import dataclass
 from skimage import io as skio
