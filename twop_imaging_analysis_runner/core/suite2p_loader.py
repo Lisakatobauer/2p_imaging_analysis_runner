@@ -34,6 +34,7 @@ class Suite2pLoader:
 
         self.suite2ppath_processed = self.config.processed_path
         self.setup_data = config.suite2p_ops
+
         self.number_planes = self.setup_data.get('number_planes', 1)
         self.experiment_n = experiment_n
 
@@ -112,10 +113,10 @@ class Suite2pLoader:
         return self._load_optional(plane_n, 'dff_traces')
 
     def dff_smooth(self, plane_n=0):
-        return self._load_optional(plane_n, 'zscore_smoothed_traces')
+        return self._load_optional(plane_n, 'dff_smoothed_traces')
 
     def zscore_smooth(self, plane_n=0):
-        return self._load_optional(plane_n, 'dff_smoothed_traces')
+        return self._load_optional(plane_n, 'zscore_smoothed_traces')
 
     def cellid(self, plane_n=0):
         rois = self.ftracesrois(plane_n)

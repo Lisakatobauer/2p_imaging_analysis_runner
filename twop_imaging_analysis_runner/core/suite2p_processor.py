@@ -15,7 +15,7 @@ from suite2p.io import BinaryFile
 from suite2p.registration.register import shift_frames_and_write
 
 from twop_imaging_analysis_runner.utils import utils
-from twop_imaging_analysis_runner.utils.config import Suite2pConfig
+from twop_imaging_analysis_runner.config.config import Suite2pConfig
 from twop_imaging_analysis_runner.utils.processingunit import ProcessingUnit
 from usage_examples.data.standard_ops import standard_ops
 from twop_imaging_analysis_runner.utils.utils import output_dir

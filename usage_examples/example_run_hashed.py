@@ -1,5 +1,5 @@
 from twop_imaging_analysis_runner.core.suite2p_processor import classifier_file, Suite2pProcessor
-from twop_imaging_analysis_runner.utils.config import Suite2pConfig
+from twop_imaging_analysis_runner.config.config import Suite2pConfig
 from twop_imaging_analysis_runner.utils.utils import get_git_root
 
 from twop_imaging_analysis_runner.config.base_config import raw_path, processed_path

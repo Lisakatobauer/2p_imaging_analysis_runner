@@ -8,7 +8,7 @@ class Suite2pConfig:
                  config_path: Path,
                  raw_path: Path,
                  processed_path: Path,
-                 suite2p_ops: Dict[str, Any],
+                 suite2p_ops: Dict[str, Any] = None,
                  classifier_file: Optional[Path] = None,
                  downsampling_factor: int = 5,
                  bidirectional_scanning: bool = True):
