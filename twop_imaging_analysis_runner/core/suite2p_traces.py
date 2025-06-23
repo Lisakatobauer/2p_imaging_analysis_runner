@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from scipy import stats
 from scipy.ndimage import uniform_filter1d
@@ -29,6 +31,8 @@ class Suite2pTraces:
         self.framerate = self.suite2p_ops['framerate']
         self.experiments = list(config.get_fish_config(fishnum)['experiments'][self.config.date].keys())
 
+        self._suite2p = {}
+
         self.processed_data = {t: {} for t in self.TRACE_TYPES}
         self.load_status = {plane: False for plane in range(self.number_planes)}
         self.process_status = {plane: False for plane in range(self.number_planes)}
@@ -44,6 +48,31 @@ class Suite2pTraces:
                      / f'plane{plane}')
         plane_dir.mkdir(parents=True, exist_ok=True)
         return plane_dir / f'{trace_type}_traces.npy'
+
+    def cellid(self, plane_n, experiment_number):
+        folder = (self.config.processed_path / f'Fish_{self.fishnum}' /
+                  f'{experiment_number}' / 'suite2p' / f'plane{plane_n}')
+
+        iscell = np.load(os.path.join(folder, 'iscell'), allow_pickle=True)
+        return iscell
+
+    def _load(self, plane_n: int):
+        required = ["stat.npy", "iscell.npy", "F.npy", "ops.npy", "spks.npy"]
+        takeitem = [False, False, False, True, False]
+        folder = (self.config.processed_path / f'Fish_{self.fishnum}' /
+                  f'{self.experiment_n}' / 'suite2p' / f'plane{plane_n}')
+
+        data = []
+        for i, fname in enumerate(required):
+            fpath = folder / fname
+            if not fpath.exists():
+                raise FileNotFoundError(f"Missing required file: {fpath}")
+            loaded = np.load(fpath, allow_pickle=True)
+            if takeitem[i]:
+                loaded = loaded.item()
+            data.append(loaded)
+
+        self._suite2p[str(plane_n)] = data
 
     def load_raw_traces(self, experiment_number: str) -> Dict[int, np.ndarray]:
         """Loads raw fluorescence traces (F.npy) for each plane."""
@@ -73,10 +102,10 @@ class Suite2pTraces:
         dff_smooth = self._process_traces(traces, dff=True, smooth=True)
         zscore_smooth = self._process_traces(traces, zscore=True, smooth=True)
 
-        self.processed_data['dff'][plane] = dff
-        self.processed_data['zscore'][plane] = zscore
-        self.processed_data['dff_smooth'][plane] = dff_smooth
-        self.processed_data['zscore_smooth'][plane] = zscore_smooth
+        self.processed_data['dff'][plane] = dff[self.cellid(plane, experiment_number), :]
+        self.processed_data['zscore'][plane] = zscore[self.cellid(plane, experiment_number), :]
+        self.processed_data['dff_smooth'][plane] = dff_smooth[self.cellid(plane, experiment_number), :]
+        self.processed_data['zscore_smooth'][plane] = zscore_smooth[self.cellid(plane, experiment_number), :]
 
         self.save_traces(experiment_number, plane)
 

@@ -133,19 +133,19 @@ class Suite2pLoader:
 
     def zscorecells(self, plane_n=0):
         data = self.zscore(plane_n)
-        return data[self.cellid(plane_n), :] if data is not None else None
+        return data if data is not None else None
 
     def dffcells(self, plane_n=0):
         data = self.dff(plane_n)
-        return data[self.cellid(plane_n), :] if data is not None else None
+        return data if data is not None else None
 
     def smoothed_dffcells(self, plane_n=0):
         data = self.dff_smooth(plane_n)
-        return data[self.cellid(plane_n), :] if data is not None else None
+        return data if data is not None else None
 
     def smoothed_zscorecells(self, plane_n=0):
         data = self.zscore_smooth(plane_n)
-        return data[self.cellid(plane_n), :] if data is not None else None
+        return data if data is not None else None
 
     def rawtif(self, plane_n=0):
         """Loads the raw merged TIFF for a given plane."""
