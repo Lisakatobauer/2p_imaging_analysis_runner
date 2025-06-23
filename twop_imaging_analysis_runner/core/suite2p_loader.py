@@ -73,13 +73,13 @@ class Suite2pLoader:
 
     def _load_optional(self, plane_n: int, key: str) -> Union[np.ndarray, None]:
         """
-        Lazily load optional files like 'zscore.npy', 'dff.npy', 'smoothed.npy'
+        Lazily load optional files like 'zscore_smooth_traces.npy', 'dff_smoothed_traces.npy'
         """
         if key not in self._optional_data:
             self._optional_data[key] = {}
 
         if plane_n not in self._optional_data[key]:
-            path = (self.suite2ppath_processed / f'Fish_{self.fishnum}' / f'{self.experiment_n}'
+            path = (self.suite2ppath_processed / f'Fish_{self.fishnum}' / f'{self.experiment_n}' / 'suite2p'
                     / f"plane{plane_n}" / f"{key}.npy")
             if not path.exists():
                 warnings.warn(f"Optional file missing: {key}.npy for plane {plane_n}")
