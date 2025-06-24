@@ -19,7 +19,7 @@ class Suite2pLoader:
     loads suite2p pipeline output.
     """
 
-    def __init__(self, config, fishnum, experiment_n):
+    def __init__(self, config, fishnum, experiment_n, number_planes):
 
         """
         Initialize Suite2p loader.
@@ -35,7 +35,7 @@ class Suite2pLoader:
         self.suite2ppath_processed = self.config.processed_path
         self.setup_data = config.suite2p_ops
 
-        self.number_planes = self.setup_data.get('number_planes', 1)
+        self.number_planes = number_planes
         self.experiment_n = experiment_n
 
         self._suite2p = {}

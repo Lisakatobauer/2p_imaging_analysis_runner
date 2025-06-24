@@ -25,7 +25,7 @@ experiment_n = 1
 # 2. Initialize and run the loader
 
 for fishnum in fish_ids:
-    loader = Suite2pLoader(config, fishnum, experiment_n)
+    loader = Suite2pLoader(config, fishnum, experiment_n, suite2p_ops['number_planes'])
     data = loader.get_basic_data()
 
 # 3. Do some data visualization
