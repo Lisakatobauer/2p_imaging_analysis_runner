@@ -56,11 +56,11 @@ class Suite2pTraces:
         iscell = np.load(os.path.join(folder, 'iscell'), allow_pickle=True)
         return iscell
 
-    def _load(self, plane_n: int):
+    def _load(self, experiment_n: int, plane_n: int):
         required = ["stat.npy", "iscell.npy", "F.npy", "ops.npy", "spks.npy"]
         takeitem = [False, False, False, True, False]
         folder = (self.config.processed_path / f'Fish_{self.fishnum}' /
-                  f'{self.experiment_n}' / 'suite2p' / f'plane{plane_n}')
+                  f'{experiment_n}' / 'suite2p' / f'plane{plane_n}')
 
         data = []
         for i, fname in enumerate(required):
@@ -86,6 +86,7 @@ class Suite2pTraces:
 
     def process_all(self):
         for exp in self.experiments:
+            exp = int(exp)
             print(f"\nProcessing experiment {exp} for Fish {self.fishnum}")
             raw_traces = self.load_raw_traces(exp)
             for plane in range(self.nplanes):
