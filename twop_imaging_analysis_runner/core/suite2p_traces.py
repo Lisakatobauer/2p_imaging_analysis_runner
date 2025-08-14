@@ -54,7 +54,7 @@ class Suite2pTraces:
                   f'{experiment_number}' / 'suite2p' / f'plane{plane_n}')
 
         iscell = np.load(os.path.join(folder, 'iscell.npy'), allow_pickle=True)
-        return iscell
+        return np.nonzero(iscell[:, 0])[0]
 
     def _load(self, experiment_n: int, plane_n: int):
         required = ["stat.npy", "iscell.npy", "F.npy", "ops.npy", "spks.npy"]
