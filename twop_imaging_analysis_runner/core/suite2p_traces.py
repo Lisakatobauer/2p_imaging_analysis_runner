@@ -53,7 +53,7 @@ class Suite2pTraces:
         folder = (self.config.processed_path / f'Fish_{self.fishnum}' /
                   f'{experiment_number}' / 'suite2p' / f'plane{plane_n}')
 
-        iscell = np.load(os.path.join(folder, 'iscell'), allow_pickle=True)
+        iscell = np.load(os.path.join(folder, 'iscell.npy'), allow_pickle=True)
         return iscell
 
     def _load(self, experiment_n: int, plane_n: int):
