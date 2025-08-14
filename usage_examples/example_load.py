@@ -9,7 +9,7 @@ from twop_imaging_analysis_runner.config.base_config import raw_path, processed_
 # 1. Config
 config_path = get_git_root() / 'config' / 'configlist'
 
-suite2p_ops = {'framerate': 30.0, 'number_planes': 6, 'classifier_path': classifier_file}
+suite2p_ops = {'framerate': 30.0, 'nplanes': 6, 'classifier_path': classifier_file}
 
 config = Suite2pConfig(
     config_path,
@@ -25,7 +25,7 @@ experiment_n = 1
 # 2. Initialize and run the loader
 
 for fishnum in fish_ids:
-    loader = Suite2pLoader(config, fishnum, experiment_n, suite2p_ops['number_planes'])
+    loader = Suite2pLoader(config, fishnum, experiment_n, suite2p_ops['nplanes'])
     data = loader.get_basic_data()
 
 # 3. Do some data visualization

@@ -27,15 +27,15 @@ class Suite2pTraces:
         self.config = config
         self.fishnum = fishnum
         self.suite2p_ops = config.suite2p_ops
-        self.number_planes = self.suite2p_ops['number_planes']
+        self.nplanes = self.suite2p_ops['nplanes']
         self.framerate = self.suite2p_ops['framerate']
         self.experiments = list(config.get_fish_config(fishnum)['experiments'][self.config.date].keys())
 
         self._suite2p = {}
 
         self.processed_data = {t: {} for t in self.TRACE_TYPES}
-        self.load_status = {plane: False for plane in range(self.number_planes)}
-        self.process_status = {plane: False for plane in range(self.number_planes)}
+        self.load_status = {plane: False for plane in range(self.nplanes)}
+        self.process_status = {plane: False for plane in range(self.nplanes)}
 
     def get_trace_path(self, experiment_number: str, plane: int) -> Path:
         """Returns the path to the raw F.npy trace file."""
@@ -77,7 +77,7 @@ class Suite2pTraces:
     def load_raw_traces(self, experiment_number: str) -> Dict[int, np.ndarray]:
         """Loads raw fluorescence traces (F.npy) for each plane."""
         traces = {}
-        for plane in range(self.number_planes):
+        for plane in range(self.nplanes):
             path = self.get_trace_path(experiment_number, plane)
             if not path.exists():
                 raise FileNotFoundError(f"Trace file not found: {path}")
@@ -88,7 +88,7 @@ class Suite2pTraces:
         for exp in self.experiments:
             print(f"\nProcessing experiment {exp} for Fish {self.fishnum}")
             raw_traces = self.load_raw_traces(exp)
-            for plane in range(self.number_planes):
+            for plane in range(self.nplanes):
                 self.process_plane(raw_traces[plane], exp, plane)
 
     def process_plane(self, traces: np.ndarray, experiment_number: str, plane: int):
@@ -167,4 +167,4 @@ class Suite2pTraces:
         if plane is not None:
             return self.processed_data[trace_type].get(plane)
         else:
-            return {p: self.processed_data[trace_type].get(p) for p in range(self.number_planes)}
+            return {p: self.processed_data[trace_type].get(p) for p in range(self.nplanes)}

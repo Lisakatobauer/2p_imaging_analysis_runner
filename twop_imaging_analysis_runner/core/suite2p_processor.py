@@ -46,7 +46,7 @@ class Suite2pProcessor(ProcessingUnit):
 
         self.setup_data = config.suite2p_ops
         self.framerate = self.setup_data.get('framerate', 30)
-        self.number_planes = self.setup_data.get('number_planes', 1)
+        self.nplanes = self.setup_data.get('nplanes', 1)
         self.downsampling_factor = self.setup_data.get('downsampling_factor', 5)
         self.classifierfile = self.setup_data.get('classifierfile', None)
         self.bidirectional_scanning = self.setup_data.get('bidirectional_scanning', True)
@@ -73,11 +73,11 @@ class Suite2pProcessor(ProcessingUnit):
         """ Run the complete Suite2p processing pipeline. """
         os.makedirs(self.save_path, exist_ok=True)
 
-        if self.number_planes > 1:
+        if self.nplanes > 1:
             # In the case of multi-plane imaging, splitting those planes is required.
             self.splitting_files_by_plane()
 
-        for plane_n in range(self.number_planes):
+        for plane_n in range(self.nplanes):
             self.plane = plane_n
             self.plane_save_path = os.path.join(self.save_path, f'plane{self.plane}')
 
@@ -126,7 +126,7 @@ class Suite2pProcessor(ProcessingUnit):
             len(os.listdir(os.path.join(self.suite2ppath_raw, self.date, f'Fish_{self.fishnum}', f'{int(exp_n)}')))
             for exp_n in self.experiments[self.date].keys()
         )
-        total_expected_file_count = total_file_count * self.number_planes
+        total_expected_file_count = total_file_count * self.nplanes
 
         # Check existing files
         existing_files = self._get_existing_plane_files(self.save_path)
@@ -143,7 +143,7 @@ class Suite2pProcessor(ProcessingUnit):
                 self.suite2ppath_raw, self.date, f'Fish_{self.fishnum}', f'{int(experiment_n)}'
             )
             experiment_files = [file for file in os.listdir(experiment_raw_path) if file.endswith('.tif')]
-            plane_arr = np.arange(self.number_planes)
+            plane_arr = np.arange(self.nplanes)
 
             for file_n, file in enumerate(experiment_files):
                 file_path = os.path.join(experiment_raw_path, file)
@@ -153,7 +153,7 @@ class Suite2pProcessor(ProcessingUnit):
                     with tiff.TiffFile(file_path) as tif_instance:
                         tif_data = np.array([page.asarray() for page in tif_instance.pages])
 
-                    roll = tif_data.shape[0] % self.number_planes
+                    roll = tif_data.shape[0] % self.nplanes
                     self._process_planes(tif_data, plane_arr, experiment_n, counter, self.save_path,
                                          existing_files, file)
 
@@ -187,13 +187,13 @@ class Suite2pProcessor(ProcessingUnit):
             file
     ) -> None:
         """Process and save individual planes from a multi-plane TIFF."""
-        plane_tifs = [[] for _ in range(self.number_planes)]
-        for plane_idx in range(self.number_planes):
+        plane_tifs = [[] for _ in range(self.nplanes)]
+        for plane_idx in range(self.nplanes):
             if (plane_idx, counter) in existing_files:
                 print(f'Skipping plane {plane_idx} for file {file} (already processed)')
                 continue
 
-            frames = tif_data[plane_idx::self.number_planes]
+            frames = tif_data[plane_idx::self.nplanes]
 
             if self.bidirectional_scanning:
                 frames = utils.bidi_offset_correction_plane(frames)
@@ -423,7 +423,7 @@ class Suite2pProcessor(ProcessingUnit):
         experiment_ns = list(self.experiments[self.date].keys())
         last_experiment = os.path.join(
             self.suite2ppath_processed, f'Fish_{self.fishnum}', f'{int(experiment_ns[-1])}', 'suite2p',
-            f'plane{self.number_planes - 1}', 'spks.npy'
+            f'plane{self.nplanes - 1}', 'spks.npy'
         )
 
         if os.path.exists(last_experiment):
@@ -432,7 +432,7 @@ class Suite2pProcessor(ProcessingUnit):
 
         print("Starting splitting files by experiment...")
 
-        for plane in range(self.number_planes):
+        for plane in range(self.nplanes):
             plane_f_path = os.path.join(self.save_path, f'plane{plane}', 'suite2p', 'plane0', 'F.npy')
             if not os.path.exists(plane_f_path):
                 print(f"Warning: File {plane_f_path} does not exist. Skipping plane {plane}.")
@@ -483,7 +483,7 @@ class Suite2pProcessor(ProcessingUnit):
             ops.update(self.your_ops)
         return {
             'fs': self.volumerate,
-            'nplanes': self.number_planes,
+            'nplanes': self.nplanes,
             'nchannels': ops.get('nchannels'),
             'tau': ops.get('tau'),
             'nonrigid': ops.get('nonrigid', True),

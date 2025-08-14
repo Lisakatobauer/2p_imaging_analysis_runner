@@ -7,7 +7,7 @@ from twop_imaging_analysis_runner.config.base_config import raw_path, processed_
 # 1. Config
 config_path = get_git_root() / 'config' / 'configlist'
 
-suite2p_ops = {'framerate': 30.0, 'number_planes': 6, 'classifier_path': classifier_file}
+suite2p_ops = {'framerate': 30.0, 'nplanes': 6, 'classifier_path': classifier_file}
 
 config = Suite2pConfig(
     config_path,

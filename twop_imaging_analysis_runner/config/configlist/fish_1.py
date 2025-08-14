@@ -15,4 +15,4 @@ experiments = {
 experiment_lengths = {'experiment_type_1': 1800, 'experiment_type_2': 900, 'experiment_type_3': 1500}
 
 # If you have different planes for the same fish, you will have to specify in your run configuration.
-number_planes = 6
+nplanes = 6
