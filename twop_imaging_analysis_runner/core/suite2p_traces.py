@@ -86,7 +86,7 @@ class Suite2pTraces:
 
     def process_all(self):
         for exp in self.experiments:
-            exp = int(exp)
+            exp = str(int(exp))
             print(f"\nProcessing experiment {exp} for Fish {self.fishnum}")
             raw_traces = self.load_raw_traces(exp)
             for plane in range(self.nplanes):
